@@ -4,8 +4,10 @@ import os
 import time
 
 import tensorflow as tf
-import tensorflow.keras as keras
 import tensorflow_hub as hub
+
+TRAIN_FILE = 'reviews_sample_train.csv'
+TEST_FILE = 'reviews_sample_test.csv'
 
 def make_dataset(path, n_samples):
     df = pd.read_csv(path, usecols=[6,9], nrows=n_samples)
@@ -41,18 +43,17 @@ def get_model():
 
 def train(epochs=5, bs=32):
     WORKDIR = os.getcwd()
-    y_train, x_train = make_dataset('reviews_train.csv', n_samples=100000)
-    y_val, x_val = make_dataset('reviews_test.csv', n_samples=10000)
+    y_train, x_train = make_dataset(TRAIN_FILE, n_samples=100)
+    y_val, x_val = make_dataset(TEST_FILE, n_samples=10)
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
                                 filepath=os.path.join(WORKDIR,'model_checkpoint.h5'),
                                 save_weights_only=False,
                                 monitor='val_acc',
                                 mode='auto',
                                 save_best_only=True)
-    checkpoint = tf.keras.callbacks.ModelCheckpoint('model-{epoch:03d}-{acc:03f}-{val_acc:03f}.h5', verbose=1, monitor='val_loss',save_best_only=True, mode='auto')
     model = get_model()
     model.fit(x_train, y_train, batch_size=bs, epochs=epochs, verbose=1,
-         validation_data=(x_val, y_val), callbacks=[checkpoint])
+         validation_data=(x_val, y_val), callbacks=[model_checkpoint_callback])
 
 
 
